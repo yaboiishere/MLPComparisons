@@ -4,7 +4,6 @@ import org.apache.spark.ml.{Pipeline, PipelineStage}
 import org.apache.spark.ml.classification.{MultilayerPerceptronClassifier, RandomForestClassifier}
 import org.apache.spark.ml.evaluation.MulticlassClassificationEvaluator
 import org.apache.spark.ml.feature.{StringIndexer, VectorAssembler}
-import org.apache.spark.scheduler.{SparkListener, SparkListenerJobEnd}
 import org.apache.spark.sql.SparkSession
 
 object IrisMLP {
@@ -12,12 +11,6 @@ object IrisMLP {
   def main(args: Array[String]): Unit = {
     val session: SparkSession = SparkSession.builder().master("local[1]").appName("RandomForestClassifierExample").getOrCreate()
     val startTime = System.currentTimeMillis()
-    var endTime = 0L
-    session.sparkContext.addSparkListener( new SparkListener {
-      override def onJobEnd(jobEnd: SparkListenerJobEnd): Unit = {
-        endTime = jobEnd.time
-      }
-    })
 
     val irisData = IrisReader.readData(session)
     val trainData = irisData(0)
@@ -36,6 +29,7 @@ object IrisMLP {
     val predictionAndLabels = result.select("prediction", "label")
     val evaluator = new MulticlassClassificationEvaluator().setMetricName("accuracy")
 
+    val endTime = System.currentTimeMillis()
     println(s"Test set accuracy = ${evaluator.evaluate(predictionAndLabels)}")
     println(s"Time taken = ${endTime - startTime} ms")
   }
